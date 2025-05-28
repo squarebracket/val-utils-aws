@@ -1,0 +1,7 @@
+*.zip
+**/node_modules/
+**/*.js
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
