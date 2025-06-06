@@ -21,7 +21,8 @@ variable "commands" {
   type = set(string)
   default = [
     "record_v1",
-    "rank_v1"
+    "rank_v1",
+    "puuid_v1"
   ]
 }
 

@@ -92,6 +92,21 @@ In the examples below, replace `USERNAME_HERE` with the username portion of an a
 #### StreamElements
 ```!cmd add !record $(touser) $(urlfetch https://d1sxhcosc9.execute-api.us-east-2.amazonaws.com/prod/record/v1?uptime=$(uptime)&username=USERNAME_HERE&tag=TAG_HERE&region=REGION_HERE)```
 
+## PUUID
+
+This endpoint simply returns the PUUID for a username/tag. It is available at https://d1sxhcosc9.execute-api.us-east-2.amazonaws.com/prod/puuid/v1 and takes the following parameters:
+
+`username`: The username portion of an account  
+`tag`: The tag portion of an account  
+
+It returns a string in the following format:
+
+```
+PUUID for username#tag: puuid
+```
+
+Simply click the link and replace `USERNAME_HERE` and `TAG_HERE` with the appropriate values: https://d1sxhcosc9.execute-api.us-east-2.amazonaws.com/prod/puuid/v1?username=USERNAME_HERE&tag=TAG_HERE
+
 # Deploying with Terraform
 
 As stated before, you will need a Henrik API key. Once you have that just do the normal `terraform init` and `terraform apply`, making sure to specify the `api_key` input variable with your Henrik API key.
