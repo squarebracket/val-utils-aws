@@ -68,6 +68,7 @@ The record command endpoint is available at https://d1sxhcosc9.execute-api.us-ea
 `tag`: The tag portion of an account  
 `region`: The region to use for the lookup (defaults to `na` if not given)  
 `name`: The name to use in the return text  
+`respondWithUptime`: Set to `true` when using a fixed period of time rather than stream uptime (defaults to `false`)  
 
 You must provide either a `puuid` or the username/tag for an account. The return text is in the following format:
 
@@ -75,7 +76,7 @@ You must provide either a `puuid` or the username/tag for an account. The return
 Record for name this stream: 4W-8L-0D (-47RR)
 ```
 
-If you don't provide a `name`, then the `name` part won't be included.
+If you don't provide a `name`, then `name` won't be included. If you set `respondWithUptime` to true, it will respond with `the previous $(uptime)` rather than `this stream`.
 
 ### Example Basic Usage
 

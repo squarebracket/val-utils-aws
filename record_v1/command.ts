@@ -11,6 +11,7 @@ type Event = {
     username?: string;
     tag?: string;
     name?: string;
+    respondWithUptime?: string;
   }
 }
 
@@ -109,6 +110,7 @@ export const handler = async (event: Event) => {
 
   const puuid = event.queryStringParameters.puuid;
   const uptime = event.queryStringParameters.uptime;
+  const respondWithUptime = /true/i.test(event.queryStringParameters.respondWithUptime);
   let region = event.queryStringParameters.region || 'na';
   let username = event.queryStringParameters.username;
   let tag = event.queryStringParameters.tag;
@@ -213,9 +215,11 @@ export const handler = async (event: Event) => {
     fullStreamEloChange = `+${fullStreamEloChange}`;
   }
 
+  const timeFrame = `${respondWithUptime ? `the previous ${uptime}` : 'this stream'}`;
+
   const response = {
     statusCode: 200,
-    body: `Record for ${name} this stream: ${winCount}W-${lossCount}L-${drawCount}D (${fullStreamEloChange}RR)`,
+    body: `Record for ${name} ${timeFrame}: ${winCount}W-${lossCount}L-${drawCount}D (${fullStreamEloChange}RR)`,
   };
   return response;
 };
