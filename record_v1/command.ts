@@ -12,6 +12,7 @@ type Event = {
     tag?: string;
     name?: string;
     respondWithUptime?: string;
+    showLastMapResult?: string;
   }
 }
 
@@ -111,6 +112,7 @@ export const handler = async (event: Event) => {
   const puuid = event.queryStringParameters.puuid;
   const uptime = event.queryStringParameters.uptime;
   const respondWithUptime = /true/i.test(event.queryStringParameters.respondWithUptime);
+  const showLastMapResult = /true/i.test(event.queryStringParameters.showLastMapResult ?? 'true');
   let region = event.queryStringParameters.region || 'na';
   let username = event.queryStringParameters.username;
   let tag = event.queryStringParameters.tag;
@@ -196,7 +198,8 @@ export const handler = async (event: Event) => {
     }
   }
 
-  matchHistory.data.filter((match) => match.meta.mode === 'Competitive').slice(0, numMatches).forEach((match) => {
+  const filteredMatches = matchHistory.data.filter((match) => match.meta.mode === 'Competitive').slice(0, numMatches);
+  filteredMatches.forEach((match) => {
     const { teams } = match;
     const playerTeam = match.stats.team.toLowerCase();
     const otherTeam = playerTeam === 'red' ? 'blue' : 'red';
@@ -217,9 +220,27 @@ export const handler = async (event: Event) => {
 
   const timeFrame = `${respondWithUptime ? `the previous ${uptime}` : 'this stream'}`;
 
+  let message = `Record for ${name} ${timeFrame}: ${winCount}W-${lossCount}L-${drawCount}D (${fullStreamEloChange}RR)`;
+
+  if (showLastMapResult && filteredMatches[0]) {
+    const lastMap = filteredMatches[0];
+    const map = lastMap.meta.map.name;
+    const playerTeam = lastMap.stats.team.toLowerCase();
+    const otherTeam = playerTeam === 'red' ? 'blue' : 'red';
+    let result: string;
+    if (lastMap.teams.red === lastMap.teams.blue) {
+      result = 'draw';
+    } else if (lastMap.teams[playerTeam] > lastMap.teams[otherTeam]) {
+      result = 'win';
+    } else {
+      result = 'loss';
+    }
+    message += ` | Last map (${map}): ${result}`;
+  }
+
   const response = {
     statusCode: 200,
-    body: `Record for ${name} ${timeFrame}: ${winCount}W-${lossCount}L-${drawCount}D (${fullStreamEloChange}RR)`,
+    body: message,
   };
   return response;
 };

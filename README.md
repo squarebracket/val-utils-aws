@@ -69,14 +69,15 @@ The record command endpoint is available at https://d1sxhcosc9.execute-api.us-ea
 `region`: The region to use for the lookup (defaults to `na` if not given)  
 `name`: The name to use in the return text  
 `respondWithUptime`: Set to `true` when using a fixed period of time rather than stream uptime (defaults to `false`)  
+`showLastMapResult`: When `true`, show the result of the last map (defaults to `true`)  
 
 You must provide either a `puuid` or the username/tag for an account. The return text is in the following format:
 
 ```
-Record for name this stream: 4W-8L-0D (-47RR)
+Record for name this stream: 4W-8L-0D (-47RR) | Last map (map name): result
 ```
 
-If you don't provide a `name`, then `name` won't be included. If you set `respondWithUptime` to true, it will respond with `the previous $(uptime)` rather than `this stream`.
+If you don't provide a `name`, then `name` won't be included. If you set `respondWithUptime` to true, it will respond with `the previous $(uptime)` rather than `this stream`. If `showLastMapResult` is set to `false`, or when there is no game in the time frame provided, then the result of the last map (and the `|` character that precedes it) won't be included.
 
 ### Example Basic Usage
 
