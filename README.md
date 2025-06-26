@@ -5,6 +5,24 @@ This repository stores the cloud resource config and code for spinning up certai
 
 If you'd simply like to use the API as provided, check the usage portion for each endpoint below, which provides examples for various twitch bots that you can copy and paste.
 
+- [API Endpoints](#api-endpoints)
+  * [Rank](#rank)
+    + [Example Basic Usage](#example-basic-usage)
+      - [Fossabot](#fossabot)
+      - [Nightbot](#nightbot)
+      - [StreamElements](#streamelements)
+    + [Example Lookup Usage](#example-lookup-usage)
+      - [Fossabot](#fossabot-1)
+      - [Nightbot](#nightbot-1)
+      - [StreamElements](#streamelements-1)
+  * [Record](#record)
+    + [Example Basic Usage](#example-basic-usage-1)
+      - [Fossabot](#fossabot-2)
+      - [Nightbot](#nightbot-2)
+      - [StreamElements](#streamelements-2)
+  * [PUUID](#puuid)
+- [Deploying with Terraform](#deploying-with-terraform)
+
 # API Endpoints
 
 ## Rank
