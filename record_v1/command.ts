@@ -116,7 +116,7 @@ export const handler = async (event: Event) => {
   let region = event.queryStringParameters.region || 'na';
   let username = event.queryStringParameters.username;
   let tag = event.queryStringParameters.tag;
-  let name = event.queryStringParameters.name || '';
+  let name = decodeURI(event.queryStringParameters.name || '');
 
   const regex = /(?:(?<days>\d+) days?)?(?:(?: and)? |\s|,?\s)?(?:(?<hours>\d+) hours?)?(?:(?: and)? |\s|,\s)?(?:(?<minutes>\d+) min(?:ute)?s?)?(?:(?: and)? |\s)?(?:(?<seconds>\d+) sec(?:ond)?s?)?$/;
   const up = regex.exec(uptime);
