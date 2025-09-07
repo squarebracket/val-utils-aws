@@ -60,7 +60,7 @@ resource "aws_lambda_function" "command" {
   filename      = archive_file.command_zip.output_path
   function_name = local.full_name
   role          = aws_iam_role.command_role.arn
-  timeout = 30
+  timeout = 60
 
   source_code_hash = archive_file.command_zip.output_base64sha256
 
