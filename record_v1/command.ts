@@ -36,7 +36,7 @@ type MmrData = {
   date: string,
 };
 
-type StoredMmrHistoryResponse = {
+type MmrHistoryResponse = {
   status: number,
   results: {
     total: number,
@@ -44,7 +44,14 @@ type StoredMmrHistoryResponse = {
     before: number,
     after: number,
   },
-  data: MmrData[],
+  data: {
+    account: {
+      name: string,
+      tag: string,
+      puuid: string,
+    },
+    history: MmrData[],
+  }
 }
 
 type MatchData = {
@@ -139,10 +146,10 @@ export const handler = async (event: Event) => {
   let matchesUrl: string;
 
   if (puuid) {
-    mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/by-puuid/stored-mmr-history/${region}/pc/${puuid}?size=35&api_key=${API_KEY}`;
+    mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/by-puuid/mmr-history/${region}/pc/${puuid}?size=35&api_key=${API_KEY}`;
     matchesUrl = `https://api.henrikdev.xyz/valorant/v1/by-puuid/stored-matches/${region}/${puuid}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
   } else if (!puuid && username && tag) {
-    mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/stored-mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
+    mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
     matchesUrl = `https://api.henrikdev.xyz/valorant/v1/stored-matches/${region}/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
   } else if (!puuid && !tag && username) {
     const decoded = decodeURI(username);
@@ -152,7 +159,7 @@ export const handler = async (event: Event) => {
       if (tag.includes(' ')) {
         [tag, region] = tag.split(' ');
       }
-      mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/stored-mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
+      mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
       matchesUrl = `https://api.henrikdev.xyz/valorant/v1/stored-matches/${region}/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
     } else {
       return {
@@ -167,13 +174,13 @@ export const handler = async (event: Event) => {
     };
   }
 
-  const mmrHistoryPromise = request<StoredMmrHistoryResponse>(mmrHistoryUrl);
+  const mmrHistoryPromise = request<MmrHistoryResponse>(mmrHistoryUrl);
   const matchHistoryPromise = request<StoredMatchesResponse>(matchesUrl);
 
   const [mmrHistory, matchHistory] = await Promise.all([mmrHistoryPromise, matchHistoryPromise]);
   console.log('all promises resolved');
 
-  const getMmrHistoryResponse = mmrHistory.data;
+  const getMmrHistoryResponse = mmrHistory.data.history;
 
   for (let i = 0; i < getMmrHistoryResponse.length; i++) {
     const { date: dateString, elo: rawElo, tier: tier } = getMmrHistoryResponse[i];
