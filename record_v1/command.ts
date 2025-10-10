@@ -54,35 +54,43 @@ type MmrHistoryResponse = {
   }
 }
 
+type MatchTeam = {
+  team_id: 'Red' | 'Blue',
+  rounds: {
+    won: number,
+    lost: number,
+  },
+  won: boolean,
+};
+
+type MatchPlayer = {
+  puuid: string,
+  name: string,
+  tag: string,
+  team_id: 'Red' | 'Blue',
+}
+
 type MatchData = {
-  meta: {
-    id: string,
+  metadata: {
+    match_id: string,
     map: {
       id: string,
       name: string
     },
-    mode: string,
+    queue: {
+      id: string,
+      name: string,
+      mode_type: string,
+    },
     started_at: string,
     region: 'eu' | 'na' | 'kr' | 'ap' | 'latam' | 'br',
   },
-  stats: {
-    puuid: string,
-    team: string,
-  },
-  teams: {
-    red: number,
-    blue: number
-  }
+  players: MatchPlayer[],
+  teams: MatchTeam[],
 }
 
-type StoredMatchesResponse = {
+type MatchesResponse = {
   status: number,
-  results: {
-    total: number,
-    returned: number,
-    before: number,
-    after: number
-  },
   data: MatchData[],
 }
 
@@ -147,10 +155,10 @@ export const handler = async (event: Event) => {
 
   if (puuid) {
     mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/by-puuid/mmr-history/${region}/pc/${puuid}?size=35&api_key=${API_KEY}`;
-    matchesUrl = `https://api.henrikdev.xyz/valorant/v1/by-puuid/stored-matches/${region}/${puuid}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
+    matchesUrl = `https://api.henrikdev.xyz/valorant/v4/by-puuid/matches/${region}/pc/${puuid}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
   } else if (!puuid && username && tag) {
     mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
-    matchesUrl = `https://api.henrikdev.xyz/valorant/v1/stored-matches/${region}/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
+    matchesUrl = `https://api.henrikdev.xyz/valorant/v4/matches/${region}/pc/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
   } else if (!puuid && !tag && username) {
     const decoded = decodeURI(username);
     if (decoded.includes('#')) {
@@ -160,7 +168,7 @@ export const handler = async (event: Event) => {
         [tag, region] = tag.split(' ');
       }
       mmrHistoryUrl = `https://api.henrikdev.xyz/valorant/v2/mmr-history/${region}/pc/${username}/${tag}?size=35&api_key=${API_KEY}`;
-      matchesUrl = `https://api.henrikdev.xyz/valorant/v1/stored-matches/${region}/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
+      matchesUrl = `https://api.henrikdev.xyz/valorant/v4/matches/${region}/pc/${username}/${tag}?mode=competitive&page=1&size=35&api_key=${API_KEY}`;
     } else {
       return {
         statusCode: 400,
@@ -175,7 +183,7 @@ export const handler = async (event: Event) => {
   }
 
   const mmrHistoryPromise = request<MmrHistoryResponse>(mmrHistoryUrl);
-  const matchHistoryPromise = request<StoredMatchesResponse>(matchesUrl);
+  const matchHistoryPromise = request<MatchesResponse>(matchesUrl);
 
   const [mmrHistory, matchHistory] = await Promise.all([mmrHistoryPromise, matchHistoryPromise]);
   console.log('all promises resolved');
@@ -205,19 +213,28 @@ export const handler = async (event: Event) => {
     }
   }
 
-  const filteredMatches = matchHistory.data.filter((match) => match.meta.mode === 'Competitive').slice(0, numMatches);
+  const filteredMatches = matchHistory.data.filter((match) => match.metadata.queue.name === 'Competitive').slice(0, numMatches);
   filteredMatches.forEach((match) => {
     const { teams } = match;
-    const playerTeam = match.stats.team.toLowerCase();
-    const otherTeam = playerTeam === 'red' ? 'blue' : 'red';
-    if (teams.red === teams.blue) {
+    const player = match.players.find(p => {
+      if (puuid) {
+        return p.puuid === puuid;
+      } else {
+        return p.name === username && p.tag === tag;
+      }
+    });
+    const playerTeam = match.teams.find(t => t.team_id === player.team_id);
+    if (playerTeam.rounds.won === playerTeam.rounds.lost) {
       drawCount++;
-    } else if (teams[playerTeam] > teams[otherTeam]) {
+    } else if (playerTeam.won) {
       winCount++;
     } else {
       lossCount++;
     }
   });
+
+  // for debugging occasional off-by-one
+  console.log(`mmrHistory length: ${getMmrHistoryResponse.length}, filteredMatches length: ${filteredMatches.length}`);
 
   let fullStreamEloChange = latestRawElo - earliestRawElo;
   if (fullStreamEloChange > 0) {
@@ -231,13 +248,19 @@ export const handler = async (event: Event) => {
 
   if (showLastMapResult && filteredMatches[0]) {
     const lastMap = filteredMatches[0];
-    const map = lastMap.meta.map.name;
-    const playerTeam = lastMap.stats.team.toLowerCase();
-    const otherTeam = playerTeam === 'red' ? 'blue' : 'red';
+    const map = lastMap.metadata.map.name;
+    const player = lastMap.players.find(p => {
+      if (puuid) {
+        return p.puuid === puuid;
+      } else {
+        return p.name === username && p.tag === tag;
+      }
+    });
+    const playerTeam = lastMap.teams.find(t => t.team_id === player.team_id);
     let result: string;
-    if (lastMap.teams.red === lastMap.teams.blue) {
+    if (playerTeam.rounds.won === playerTeam.rounds.lost) {
       result = 'draw';
-    } else if (lastMap.teams[playerTeam] > lastMap.teams[otherTeam]) {
+    } else if (playerTeam.won) {
       result = 'win';
     } else {
       result = 'loss';
