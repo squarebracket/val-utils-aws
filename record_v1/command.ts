@@ -175,10 +175,18 @@ export const handler = async (event: Event) => {
 
   const getMmrHistoryResponse = mmrHistory.data;
 
+  const season = getMmrHistoryResponse[0].season.short;
+
   for (let i = 0; i < getMmrHistoryResponse.length; i++) {
     const { date: dateString, elo: rawElo, tier: tier } = getMmrHistoryResponse[i];
     const mapId = getMmrHistoryResponse[i].map.id;
+    const matchSeason = getMmrHistoryResponse[i].season.short;
     const matchStart = new Date(dateString);
+    if (matchSeason !== season) {
+      // stop when we hit old season, even if it's during the same stream
+      earliestRawElo = earliestRawElo - getMmrHistoryResponse[i - 1].last_change;
+      break;
+    }
     if (matchStart < streamStart) {
       if (tier.id !== 0 && numMatches > 0) {
         earliestRawElo = rawElo;
